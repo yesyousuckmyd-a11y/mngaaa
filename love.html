@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For My Shree | Satin Shadows</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..9,400&display=swap');
+
+        :root {
+            --amber: #ff9d00;
+            --bronze: #8a5a44;
+            --espresso: #1a0f0f;
+            --silk: rgba(255, 255, 255, 0.03);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #2c1616 0%, #0a0505 100%);
+            color: #d4c4bc; font-family: 'Bodoni Moda', serif;
+            overflow: hidden; touch-action: none;
+        }
+
+        #canvas { position: fixed; top: 0; left: 0; z-index: 1; filter: blur(2px); }
+
+        /* Mobile Cursor (Hidden on touch devices, shown on desktop) */
+        #cursor {
+            width: 6px; height: 6px; background: var(--amber);
+            position: fixed; pointer-events: none; z-index: 9999;
+            border-radius: 50%; box-shadow: 0 0 15px var(--amber), 0 0 30px #ff0000;
+            display: none;
+        }
+
+        @media (pointer: fine) { #cursor { display: block; } }
+
+        .ui-layer {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; text-align: center;
+            transition: opacity 2s ease;
+            padding: 20px;
+        }
+
+        .name-reveal {
+            font-size: 3.5rem; font-weight: 200; letter-spacing: 12px;
+            color: #f5ebe0; opacity: 0.7;
+            text-shadow: 0 0 20px rgba(255, 157, 0, 0.2);
+            font-style: italic; margin-bottom: 10px;
+        }
+
+        .heart-main {
+            width: 50px; height: 50px; background: #5e0b0b;
+            transform: rotate(-45deg); cursor: pointer;
+            box-shadow: 0 0 40px rgba(94, 11, 11, 0.6);
+            animation: pulse 2.5s infinite ease-in-out;
+            position: relative; margin: 40px;
+        }
+        .heart-main::after, .heart-main::before {
+            content: ""; width: 50px; height: 50px; background: #5e0b0b;
+            border-radius: 50%; position: absolute;
+        }
+        .heart-main::after { top: -25px; left: 0; }
+        .heart-main::before { left: 25px; top: 0; }
+
+        #letter-box {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px;
+            padding: 30px; border-radius: 2px;
+            background: rgba(10, 5, 5, 0.85);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(138, 90, 68, 0.3);
+            display: none; z-index: 100;
+            text-align: left;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            transition: opacity 2s ease;
+        }
+
+        .letter-content { 
+            font-size: 1.2rem; line-height: 1.8; color: #e3d5ca; 
+            font-style: italic; letter-spacing: 0.8px;
+        }
+
+        #photo-frame {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            display: none; justify-content: center; align-items: center;
+            z-index: 50; opacity: 0;
+            transition: opacity 5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #photo-frame img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: brightness(0.4) contrast(1.1) sepia(0.2);
+            animation: kenBurns 20s infinite alternate;
+        }
+
+        @keyframes kenBurns {
+            from { transform: scale(1); }
+            to { transform: scale(1.15); }
+        }
+
+        .btn {
+            background: none; border: none; 
+            color: var(--bronze); padding: 15px;
+            font-family: inherit; font-size: 1rem;
+            letter-spacing: 5px; cursor: pointer; transition: 0.8s;
+            text-transform: uppercase;
+        }
+        .btn:hover { color: #f5ebe0; text-shadow: 0 0 10px var(--amber); }
+        #noBtn { position: absolute; opacity: 0.2; font-size: 0.7rem; pointer-events: none; }
+
+        @keyframes pulse { 0% { transform: rotate(-45deg) scale(1); opacity: 0.6;} 50% { transform: rotate(-45deg) scale(1.1); opacity: 1;} 100% { transform: rotate(-45deg) scale(1); opacity: 0.6;} }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <canvas id="canvas"></canvas>
+
+    <audio id="bgMusic" loop>
+        <source src="lovee.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="photo-frame">
+        <img src="love.jpg" alt="Our Moment">
+    </div>
+
+    <div class="ui-layer" id="hero">
+        <div class="name-reveal">Mngaaaaaa</div>
+        <div class="heart-main" onclick="celebrate()"></div>
+        <div style="position: relative; width: 100%; display: flex; justify-content: center; gap: 20px;">
+            <button class="btn" id="yesBtn" onclick="celebrate()">Close?</button>
+            <button class="btn" id="noBtn">Away</button>
+        </div>
+    </div>
+
+    <div id="letter-box">
+        <div class="letter-content" id="typewriter"></div>
+        <p style="margin-top: 25px; text-align: right; color: var(--bronze); letter-spacing: 4px; font-size: 0.9rem;">SAMPŪ</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        let width, height, embers = [];
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            embers = [];
+            for(let i=0; i<30; i++) {
+                embers.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    s: Math.random() * 2 + 1,
+                    v: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            embers.forEach(e => {
+                e.y -= e.v;
+                if(e.y < -10) e.y = height + 10;
+                ctx.beginPath();
+                ctx.arc(e.x + Math.sin(e.y/40)*8, e.y, e.s, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 157, 0, 0.12)";
+                ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        const letterText = "Shree,\n\nI want to get lost in the quiet moments with you. The world is too loud, but here... with you, everything is soft.\n\nYou're not just a person I love, you're the feeling of coming home after a long day.\n\nStay with me. Always.";
+
+        function celebrate() {
+            const music = document.getElementById('bgMusic');
+            music.play().catch(() => {});
+            
+            document.getElementById('hero').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('hero').style.display = 'none';
+                document.getElementById('letter-box').style.display = 'block';
+                typeWriter(0);
+            }, 1000);
+        }
+
+        function typeWriter(i) {
+            if (i < letterText.length) {
+                document.getElementById('typewriter').innerHTML += letterText.charAt(i) === '\n' ? '<br>' : letterText.charAt(i);
+                setTimeout(() => typeWriter(i + 1), 65);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('letter-box').style.opacity = '0';
+                    const frame = document.getElementById('photo-frame');
+                    frame.style.display = 'flex';
+                    setTimeout(() => { frame.style.opacity = '1'; }, 100);
+                }, 3000);
+            }
+        }
+
+        init(); animate();
+        window.addEventListener('resize', init);
+    </script>
+</body>
+</html>
